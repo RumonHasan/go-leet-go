@@ -619,3 +619,41 @@ func uniquePaths(obstacleGrid [][]int) int {
 
 	return recurse(0, 0)
 }
+
+// function to get the min Path cost for a matrix
+func minPathCost(grid [][]int, moveCost [][]int) int {
+	cache := make(map[string]int)
+	rowLen := len(grid)
+	colLen := len(grid[0])
+	minCost := math.MaxInt32
+
+	var recurse func(int, int) int
+	recurse = func(row, col int) int {
+		cacheKey := strconv.Itoa(row) + "," + strconv.Itoa(col)
+		if value, found := cache[cacheKey]; found {
+			return value
+		}
+
+		if row < 0 || col < 0 || row >= rowLen || col >= colLen {
+			return 0
+		}
+		// if its the last element then return the actual grid value
+		if row == rowLen-1 {
+			return grid[row][col]
+		}
+		minCost := math.MaxFloat32
+
+		for nextCol := 0; nextCol < colLen; nextCol++ {
+			currGridVal := grid[row][col]
+			currMoveCost := moveCost[grid[row][col]][nextCol] // gets the exact index and col value of the movecost
+			minCost = min(minCost, float64(currGridVal+currMoveCost+recurse(row+1, nextCol)))
+		}
+		cache[cacheKey] = int(minCost)
+		return int(minCost)
+	}
+
+	for col := 0; col < colLen; col++ {
+		minCost = min(recurse(0, col), minCost)
+	}
+	return minCost
+}
