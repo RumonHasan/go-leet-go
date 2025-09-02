@@ -658,12 +658,13 @@ func minPathCost(grid [][]int, moveCost [][]int) int {
 	return minCost
 }
 
-// getting the min failing sum for path using recursiona and dfs approach
-func minFaillingSum(matrix [][]int) int {
+// getting the min failing sum for path using recursiona and dfs approach TLE
+func minFaillingSumHard(grid [][]int) int {
 	cache := make(map[string]int)
 	minCost := math.MaxFloat32
-	rowLen := len(matrix)
-	colLen := len(matrix[0])
+	rowLen := len(grid)
+	colLen := len(grid[0])
+	maxVal := 9999999
 
 	var recurse func(int, int) int
 	recurse = func(row, col int) int {
@@ -673,15 +674,22 @@ func minFaillingSum(matrix [][]int) int {
 		}
 		// base border check
 		if row < 0 || col < 0 || row >= rowLen || col >= colLen {
-			return 9999999
+			return maxVal
 		}
 		if row == rowLen-1 {
-			return matrix[row][col]
+			return grid[row][col]
 		}
-		currMinCost := matrix[row][col] + min(recurse(row+1, col), recurse(row+1, col+1), recurse(row+1, col-1))
-		cache[cacheKey] = currMinCost
-		return currMinCost
+		minCost := maxVal
 
+		// traversing all the cols and checking whether the next one or not
+		for nextCol := 0; nextCol < colLen; nextCol++ {
+			if nextCol != col {
+				minCost = min(minCost, recurse(row+1, nextCol))
+			}
+		}
+		result := grid[row][col] + minCost
+		cache[cacheKey] = result
+		return result
 	}
 
 	for col := 0; col < colLen; col++ {
