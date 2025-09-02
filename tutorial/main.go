@@ -657,3 +657,36 @@ func minPathCost(grid [][]int, moveCost [][]int) int {
 	}
 	return minCost
 }
+
+// getting the min failing sum for path using recursiona and dfs approach
+func minFaillingSum(matrix [][]int) int {
+	cache := make(map[string]int)
+	minCost := math.MaxFloat32
+	rowLen := len(matrix)
+	colLen := len(matrix[0])
+
+	var recurse func(int, int) int
+	recurse = func(row, col int) int {
+		cacheKey := strconv.Itoa(row) + "," + strconv.Itoa(col)
+		if value, found := cache[cacheKey]; found {
+			return value
+		}
+		// base border check
+		if row < 0 || col < 0 || row >= rowLen || col >= colLen {
+			return 9999999
+		}
+		if row == rowLen-1 {
+			return matrix[row][col]
+		}
+		currMinCost := matrix[row][col] + min(recurse(row+1, col), recurse(row+1, col+1), recurse(row+1, col-1))
+		cache[cacheKey] = currMinCost
+		return currMinCost
+
+	}
+
+	for col := 0; col < colLen; col++ {
+		minCost = min(minCost, float64(recurse(0, col)))
+	}
+
+	return int(minCost)
+}
