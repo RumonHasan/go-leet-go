@@ -698,3 +698,51 @@ func minFaillingSumHard(grid [][]int) int {
 
 	return int(minCost)
 }
+
+// getting the longest increasing path
+func longestIncreasingPath(matrix [][]int) int {
+	cache := make(map[string]int)
+	longestPathCount := 0
+	rowLen := len(matrix)
+	colLen := len(matrix[0])
+
+	var recurse func(int, int) int
+	recurse = func(row, col int) int {
+		cacheKey := strconv.Itoa(row) + "," + strconv.Itoa(col)
+		if cachedValue, found := cache[cacheKey]; found {
+			return cachedValue
+		}
+		// base case - exceed boundary and return 0 since there is no path
+		if row < 0 || col < 0 || row >= rowLen || col >= colLen {
+			return 0
+		}
+		directions := [][]int{{0, 1}, {0, -1}, {1, 0}, {-1, 0}}
+		localMaxPathResult := 0
+		for _, direction := range directions {
+			// need to extrapolate next row or next col
+			newRow := row + direction[0]
+			newCol := col + direction[1]
+			// border check then only recurse if the condition passes for valid path
+			if newRow >= 0 && newCol >= 0 && newRow < rowLen && newCol < colLen {
+				if matrix[newRow][newCol] > matrix[row][col] {
+					// updates the particular direction and each recursive cycle
+					localMaxPathResult = max(localMaxPathResult, recurse(newRow, newCol))
+				}
+			}
+		}
+		// adds one if the localResult returns a path..
+		localResult := 1 + localMaxPathResult
+		cache[cacheKey] = localResult
+		return localResult
+	}
+
+	// traversing the matrix and updating the current max path
+	for row := 0; row < rowLen; row++ {
+		for col := 0; col < colLen; col++ {
+			currMaxPath := recurse(row, col)
+			longestPathCount = max(longestPathCount, currMaxPath)
+		}
+	}
+
+	return longestPathCount
+}
