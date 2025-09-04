@@ -746,3 +746,42 @@ func longestIncreasingPath(matrix [][]int) int {
 
 	return longestPathCount
 }
+
+// using dfs memo to calculate the count paths from a grid
+func countPaths(grid [][]int) int {
+	cache := make(map[string]int)
+	paths := 0
+	rowLen := len(grid)
+	colLen := len(grid[0])
+	const MOD = 1000000007 // to limit the mod path and control overflow
+
+	var recurse func(int, int) int
+	recurse = func(row, col int) int {
+		cacheKey := strconv.Itoa(row) + "," + strconv.Itoa(col)
+		if cachedValue, found := cache[cacheKey]; found {
+			return cachedValue
+		}
+		if row < 0 || row >= rowLen || col < 0 || col >= colLen {
+			return 0
+		}
+		var directions = [][]int{{0, 1}, {0, -1}, {1, 0}, {-1, 0}} // directions for the grid path to traverse in
+		localPath := 1
+		for _, direction := range directions {
+			newRow := row + direction[0]
+			newCol := col + direction[1]
+
+			if newRow >= 0 && newRow < rowLen && newCol >= 0 && newCol < colLen && grid[newRow][newCol] > grid[row][col] {
+				localPath = (localPath + recurse(newRow, newCol)) % MOD
+			}
+		}
+		cache[cacheKey] = localPath
+		return localPath
+	}
+	// passing each cell location in order to get the total number of paths
+	for row := 0; row < rowLen; row++ {
+		for col := 0; col < colLen; col++ {
+			paths = (paths + recurse(row, col)) % MOD
+		}
+	}
+	return paths
+}
