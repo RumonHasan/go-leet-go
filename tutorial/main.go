@@ -754,7 +754,14 @@ func countPaths(grid [][]int) int {
 	rowLen := len(grid)
 	colLen := len(grid[0])
 	const MOD = 1000000007 // to limit the mod path and control overflow
-
+	// Optimized caching approach
+	visited := make([][]int, len(grid))
+	for index := 0; index < len(visited); index++ {
+		visited[index] = make([]int, len(visited[index]))
+		for subIndex := 0; subIndex < len(visited[index]); subIndex++ {
+			visited[index][subIndex] = -1
+		}
+	}
 	var recurse func(int, int) int
 	recurse = func(row, col int) int {
 		cacheKey := strconv.Itoa(row) + "," + strconv.Itoa(col)
@@ -784,4 +791,101 @@ func countPaths(grid [][]int) int {
 		}
 	}
 	return paths
+}
+
+// getting maxmimum gold with dfs memoization ... visiting a cell with 0 resets the path to return 0
+func getMaximumGold(grid [][]int) int {
+	maxAmount := 0
+	rowLen := len(grid)
+	colLen := len(grid[0])
+
+	var recurse func(int, int, map[string]bool) int
+	recurse = func(row, col int, visited_map map[string]bool) int {
+
+		cacheKey := strconv.Itoa(row) + "," + strconv.Itoa(col)
+		if visited_map[cacheKey] {
+			return 0
+		}
+
+		visited_map[cacheKey] = true // visited path
+
+		if row < 0 || row >= rowLen || col < 0 || col >= colLen || grid[row][col] == 0 {
+			return 0
+		}
+
+		directions := [][]int{{0, 1}, {0, -1}, {-1, 0}, {1, 0}}
+		localMax := 0
+
+		for _, direction := range directions {
+			newRow := row + direction[0]
+			newCol := col + direction[1]
+
+			if newRow >= 0 && newCol >= 0 && newRow < rowLen && newCol < colLen &&
+				grid[newRow][newCol] != 0 {
+				localMax = max(localMax, recurse(newRow, newCol, visited_map))
+			}
+		}
+		visited_map[cacheKey] = false // unmark for backtracking
+		totalPath := grid[row][col] + localMax
+		return totalPath
+	}
+
+	for row := 0; row < rowLen; row++ {
+		for col := 0; col < colLen; col++ {
+			if grid[row][col] != 0 {
+				maxAmount = max(maxAmount, recurse(row, col, make(map[string]bool)))
+			}
+		}
+	}
+
+	return maxAmount
+}
+
+// difference is changing the grid in place
+func optimizedPathGold(grid [][]int) int {
+	if len(grid) == 0 || len(grid[0]) == 0 {
+		return 0
+	}
+
+	maxAmount := 0
+	rows := len(grid)
+	cols := len(grid[0])
+
+	var backtrack func(int, int) int
+	backtrack = func(row, col int) int {
+		// Check bounds and validity
+		if row < 0 || row >= rows || col < 0 || col >= cols || grid[row][col] == 0 {
+			return 0
+		}
+
+		// Store original value and mark as visited
+		original := grid[row][col]
+		grid[row][col] = 0
+
+		// Explore all 4 directions
+		directions := [][]int{{0, 1}, {0, -1}, {-1, 0}, {1, 0}}
+		maxPath := 0
+
+		for _, dir := range directions {
+			newRow := row + dir[0]
+			newCol := col + dir[1]
+			maxPath = max(maxPath, backtrack(newRow, newCol))
+		}
+
+		// Backtrack: restore original value
+		grid[row][col] = original
+
+		return original + maxPath
+	}
+
+	// Try starting from each cell with gold
+	for row := 0; row < rows; row++ {
+		for col := 0; col < cols; col++ {
+			if grid[row][col] != 0 {
+				maxAmount = max(maxAmount, backtrack(row, col))
+			}
+		}
+	}
+
+	return maxAmount
 }
