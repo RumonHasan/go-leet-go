@@ -889,3 +889,100 @@ func optimizedPathGold(grid [][]int) int {
 
 	return maxAmount
 }
+
+// HARD Problem: getting number of steps to get to 0 using recursion
+func numWays(steps int, arrLen int) int {
+	numWays := 0
+	const MOD = 1000000007
+	// limit array length before creating memo
+	if arrLen > steps+1 {
+		arrLen = steps + 1
+	}
+
+	maxPos := min(steps, arrLen-1)
+	memo := make([][]int, arrLen)
+	for i := range memo {
+		memo[i] = make([]int, steps+1)
+		for j := range memo[i] {
+			memo[i][j] = -1
+		}
+	}
+	var recurse func(int, int) int
+	recurse = func(currentPos, remainingSteps int) int {
+		// returning a cached path
+		if memo[currentPos][remainingSteps] != -1 {
+			return memo[currentPos][remainingSteps]
+		}
+		// main base case to return a valid path
+		if remainingSteps == 0 {
+			// main case to return a valid path
+			if currentPos == 0 {
+				return 1
+			}
+			return 0
+		}
+		// if steps are exchausted then there is no turning back to 0
+		if currentPos > remainingSteps || remainingSteps < 0 || currentPos > maxPos {
+			memo[currentPos][remainingSteps] = 0
+			return 0
+		}
+		totalPaths := 0
+		// moving right within boundary
+		movingRight := 0
+		if currentPos+1 < arrLen {
+			movingRight = (recurse(currentPos+1, remainingSteps-1)) % MOD
+		}
+		// moving left within boundary
+		movingLeft := 0
+		if currentPos-1 >= 0 {
+			movingLeft = (recurse(currentPos-1, remainingSteps-1)) % MOD
+		}
+		samePos := 0
+		samePos = (recurse(currentPos, remainingSteps-1)) % MOD
+
+		totalPaths = (movingLeft + movingRight + samePos) % MOD
+		memo[currentPos][remainingSteps] = totalPaths
+		return totalPaths
+	}
+	numWays = recurse(0, steps) // initial recursive call to begin the recursion
+	return numWays
+}
+
+// simialar question to reaching destination but above is hard problem
+func numberOfWays(startPos int, endPos int, k int) int {
+	cache := make(map[string]int)
+	const MOD = 1000000007
+
+	var recurse func(int, int) int
+	recurse = func(currentPos, remainingSteps int) int {
+		cacheKey := strconv.Itoa(currentPos) + "-" + strconv.Itoa(remainingSteps)
+		if val, found := cache[cacheKey]; found {
+			return val
+		}
+		if remainingSteps < 0 {
+			return 0
+		}
+
+		if remainingSteps == 0 {
+			if currentPos == endPos {
+				return 1
+			}
+			return 0
+		}
+		// no more steps remaining
+		if math.Abs(float64(currentPos)-float64(endPos)) > float64(remainingSteps) {
+			return 0
+		}
+
+		totalWays := 0
+		left := recurse(currentPos-1, remainingSteps-1)
+		right := recurse(currentPos+1, remainingSteps-1)
+
+		totalWays = (left + right) % MOD
+
+		cache[cacheKey] = totalWays
+		return totalWays
+	}
+
+	return recurse(startPos, k)
+}
