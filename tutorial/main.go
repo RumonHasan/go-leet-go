@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -985,4 +986,103 @@ func numberOfWays(startPos int, endPos int, k int) int {
 	}
 
 	return recurse(startPos, k)
+}
+
+// minimum cost to cut stick... cutting from both sides using dfs memo interval technique
+func minCostToCutStick(n int, cuts []int) int {
+	cuts = append(cuts, 0, n)
+	sort.Ints(cuts) // enables us to recurse between intervals
+	minCost := math.MaxInt32
+
+	var recurse func(int, int, map[string]int) int
+	recurse = func(left, right int, cache map[string]int) int {
+		// cached minimum path
+		cacheKey := strconv.Itoa(left) + "-" + strconv.Itoa(right)
+		if cacheMin, found := cache[cacheKey]; found {
+			return cacheMin
+		}
+		// base case no possible cuts to check if there is any cut positions between the left and rigth boundary
+		if right-left <= 1 {
+			return 0
+		}
+		minCostLocal := math.MaxInt32
+
+		// for loop to check through various intervals
+		for currIndex := left + 1; currIndex < right; currIndex++ {
+			currentCost := cuts[right] - cuts[left]
+			minCost := currentCost + recurse(left, currIndex, cache) + recurse(currIndex, right, cache)
+			minCostLocal = min(minCost, minCostLocal)
+		}
+
+		cache[cacheKey] = minCostLocal
+		return minCostLocal
+	}
+
+	minCost = recurse(0, len(cuts)-1, make(map[string]int))
+	// have to pass len cuts - 1 because its calculating till n value
+	return minCost
+}
+
+// solving jump game V with dfs memo and recursion while keeping track of proper caching
+func jumpGameV(arr []int, d int) int {
+	maxCost := 0
+	memo := make(map[int]int)
+	// dfs function to check whether the inner elements are bigger than the current one or not
+	var canJump func(int, int) bool
+	canJump = func(from, to int) bool {
+		// if the from side is smaller or equal then no more checks need to be performed
+		if arr[from] <= arr[to] {
+			return false
+		}
+		// checking elements within the from and to range
+		start := min(from, to) + 1
+		end := max(from, to)
+		for i := start; i < end; i++ {
+			currEl := arr[i]
+			if currEl >= arr[from] {
+				return false
+			}
+		}
+		return true
+	}
+	// dfs recursive function
+	var recurse func(int, int) int
+	recurse = func(start, d int) int {
+		// cached max cost
+		cacheKey := start
+		if cachedMaxCost, found := memo[cacheKey]; found {
+			return cachedMaxCost
+		}
+		maxVisits := 1
+		// checking left step jump count
+		for step := 1; step <= d; step++ {
+			newJumpIndex := start - step // goes left
+			if newJumpIndex < 0 {        // bound checking
+				break
+			}
+			if canJump(start, newJumpIndex) {
+				visits := 1 + recurse(newJumpIndex, d)
+				maxVisits = max(maxVisits, visits)
+			}
+		}
+		// checking right step jump count
+		for step := 1; step <= d; step++ {
+			newJumpIndex := start + step  // for right
+			if newJumpIndex >= len(arr) { // bound checking
+				break
+			}
+			if canJump(start, newJumpIndex) {
+				visits := 1 + recurse(newJumpIndex, d)
+				maxVisits = max(maxVisits, visits)
+			}
+		}
+		memo[cacheKey] = maxVisits
+		return maxVisits
+	}
+	// starting from each position in the array and collect recursive paths
+	for startIndex := 0; startIndex < len(arr); startIndex++ {
+		result := recurse(startIndex, d)
+		maxCost = max(maxCost, result)
+	}
+	return maxCost
 }
