@@ -1086,3 +1086,47 @@ func jumpGameV(arr []int, d int) int {
 	}
 	return maxCost
 }
+
+// jump game ii reaching index with value 0
+// record the visited index using a set
+
+func jumpGameIII(arr []int, start int) bool {
+	memo := make(map[int]bool)
+	visitedIndex := make(map[int]bool)
+
+	var recurse func(int) bool
+	recurse = func(index int) bool {
+		cacheKey := index
+		if cachedPath, found := memo[cacheKey]; found {
+			return cachedPath
+		}
+		visitedIndex[index] = true
+		// main base case for true
+		if arr[index] == 0 {
+			return true
+		}
+		if index < 0 || index >= len(arr) {
+			memo[cacheKey] = false
+			return false
+		}
+		validPath := false
+		currJumpValue := arr[index]
+		// logic for left side
+		var leftJump bool
+		if index-currJumpValue >= 0 && !visitedIndex[index-currJumpValue] {
+			leftJump = recurse(index - currJumpValue)
+		}
+		// logic for right side
+		var rightJump bool
+		if index+currJumpValue < len(arr) && !visitedIndex[index+currJumpValue] {
+			rightJump = recurse(index + currJumpValue)
+		}
+
+		validPath = leftJump || rightJump
+		memo[cacheKey] = validPath
+		return validPath
+	}
+
+	state := recurse(start)
+	return state
+}
