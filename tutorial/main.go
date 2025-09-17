@@ -1130,3 +1130,51 @@ func jumpGameIII(arr []int, start int) bool {
 	state := recurse(start)
 	return state
 }
+
+// frog can cross using dfs memo approach
+func frogCanJump(stones []int) bool {
+	// make boolean array
+	maxPos := stones[len(stones)-1]
+	memo := make(map[string]bool)
+
+	if stones[1] != 1 {
+		return false
+	}
+
+	hasStones := make(map[int]bool)
+	for _, v := range stones {
+		hasStones[v] = true
+	}
+	var recurse func(int, int) bool
+	recurse = func(currIndex, prevJump int) bool {
+		key := strconv.Itoa(currIndex) + "-" + strconv.Itoa(prevJump)
+		if val, found := memo[key]; found {
+			return val
+		}
+		// main base case
+		if currIndex < 0 || currIndex > maxPos {
+			memo[key] = false
+			return false
+		}
+		if currIndex == stones[len(stones)-1] {
+			return true
+		}
+		validJump := false
+		// main check to see whether jump is valid or not
+		directions := []int{prevJump - 1, prevJump, prevJump + 1}
+
+		for _, direction := range directions {
+			if direction > 0 {
+				newDirection := direction + currIndex
+				if hasStones[newDirection] { // checking stones
+					jumpState := recurse(newDirection, direction) // direction is the previous direction
+					validJump = jumpState || validJump
+				}
+			}
+		}
+
+		memo[key] = validJump
+		return validJump
+	}
+	return recurse(1, 1) // passing current index and prevJump coords
+}
