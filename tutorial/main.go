@@ -1217,3 +1217,32 @@ func minSideWaysJump(obstacles []int) int {
 	minJumps = recurse(0, 2)
 	return minJumps
 }
+
+// using skip and reuse technique for dfs memoization
+func combinationSum4(nums []int, target int) int {
+	memo := make(map[string]int)
+
+	var recurse func(int, int) int
+	recurse = func(index, target int) int {
+		key := strconv.Itoa(index) + "-" + strconv.Itoa(target)
+		if val, found := memo[key]; found {
+			return val
+		}
+		if target == 0 {
+			return 1
+		}
+		if index >= len(nums) || target < 0 {
+			return 0
+		}
+		// means u can pick again from any combination
+		ways := recurse(0, target-nums[index]) // resets index to make it work for any number of other numbers
+
+		skip := recurse(index+1, target)
+
+		totalWays := ways + skip
+		memo[key] = totalWays
+		return totalWays
+	}
+
+	return recurse(0, target)
+}
