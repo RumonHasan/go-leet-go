@@ -1178,3 +1178,42 @@ func frogCanJump(stones []int) bool {
 	}
 	return recurse(1, 1) // passing current index and prevJump coords
 }
+
+// geting minimum side ways jump only jump if the obstacles position is not equal to lane
+func minSideWaysJump(obstacles []int) int {
+	cache := make(map[string]int)
+	minJumps := math.MaxInt32
+
+	var recurse func(int, int) int
+	recurse = func(currPos, currLane int) int {
+		// cached min jump path
+		cacheKey := strconv.Itoa(currPos) + "-" + strconv.Itoa(currLane)
+		if val, found := cache[cacheKey]; found {
+			return val
+		}
+		// main base case if it exceeds length
+		if currPos == len(obstacles)-1 {
+			return 0
+		}
+		if currPos >= len(obstacles) {
+			return 9999999
+		}
+		jumps := math.MaxInt32
+		// keep the same path if there are no obstacles in the current lane
+		if obstacles[currPos+1] != currLane && currPos+1 < len(obstacles) {
+			jumps = min(recurse(currPos+1, currLane), jumps)
+		}
+		// checking for sideways jumps
+		for lane := 1; lane <= 3; lane++ {
+			// side jump plus moving forward in orer to avoid infinite recursion
+			if lane != currLane && obstacles[currPos] != lane && obstacles[currPos+1] != lane {
+				jumps = int(math.Min(float64(jumps), 1+float64(recurse(currPos+1, lane))))
+			}
+		}
+		cache[cacheKey] = jumps
+		return jumps
+	}
+
+	minJumps = recurse(0, 2)
+	return minJumps
+}
