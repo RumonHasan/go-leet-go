@@ -1246,3 +1246,54 @@ func combinationSum4(nums []int, target int) int {
 
 	return recurse(0, target)
 }
+
+// getting the cheapest price for flights remember.. k flight means k stops means k + 1 stops
+func findCheapestPrice(n int, flights [][]int, src int, dst int, k int) int {
+	memo := make(map[string]int)
+	minCost := math.MaxInt32
+	// organizing array into map structure
+	// array restructing in order to collect the items based on the source being the key and the to and cost being the key pair values
+	flightMap := make(map[int][][2]int)
+	for _, flight := range flights {
+		from, to, cost := flight[0], flight[1], flight[2]
+		flightMap[from] = append(flightMap[from], [2]int{to, cost})
+	}
+	// the recursion will be traversing through a map hence you will not need to use an index for traversal
+	var recurse func(int, int) int
+	recurse = func(city, remainingStops int) int {
+		// cached minCost for flight traversal
+		key := strconv.Itoa(city) + "-" + strconv.Itoa(remainingStops)
+		if cachedJumpValue, found := memo[key]; found {
+			return cachedJumpValue
+		}
+		// base case
+		if city == dst {
+			return 0
+		}
+		// if there are no remaining stops then return the maximum int size value possible
+		if remainingStops < 0 {
+			return math.MaxInt32
+		}
+		localMinCost := math.MaxInt32
+		// current local cost from each source city
+		for _, flightDetails := range flightMap[city] {
+			destination, cost := flightDetails[0], flightDetails[1]
+			if remainingStops > 0 { // need to check before running the recursion
+				recursiveResult := recurse(destination, remainingStops-1)
+				if recursiveResult != math.MaxInt32 {
+					totalCost := recursiveResult + cost
+					localMinCost = min(localMinCost, totalCost)
+				}
+			}
+		}
+		memo[key] = localMinCost
+		return localMinCost
+	}
+
+	// getting the recursive avlue
+	minCost = recurse(src, k+1)
+	if minCost == math.MaxInt32 {
+		return -1
+	}
+	return minCost
+}
