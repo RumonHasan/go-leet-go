@@ -1297,3 +1297,40 @@ func findCheapestPrice(n int, flights [][]int, src int, dst int, k int) int {
 	}
 	return minCost
 }
+
+// minimum number of distance to make word1 to word2
+func minDistance(word1 string, word2 string) int {
+	memo := make(map[string]int)
+
+	var recurse func(int, int) int
+	recurse = func(indexOne, indexTwo int) int {
+		// getting the cached value
+		key := strconv.Itoa(indexOne) + "-" + strconv.Itoa(indexTwo)
+		if val, found := memo[key]; found {
+			return val
+		}
+		if indexOne == len(word1) && indexTwo == len(word2) {
+			return 0
+		}
+		if indexOne == len(word1) {
+			return len(word2) - indexTwo
+		}
+		if indexTwo == len(word2) {
+			return len(word1) - indexOne
+		}
+
+		// main recursive logic
+		minDeletions := math.MaxInt32
+
+		if word1[indexOne] == word2[indexTwo] {
+			minDeletions = recurse(indexOne+1, indexTwo+1)
+		} else {
+			minDeletions = 1 + min(recurse(indexOne+1, indexTwo), recurse(indexOne, indexTwo+1), minDeletions)
+		}
+
+		memo[key] = minDeletions
+		return minDeletions
+	}
+
+	return recurse(0, 0)
+}
