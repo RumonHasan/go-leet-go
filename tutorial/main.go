@@ -1334,3 +1334,46 @@ func minDistance(word1 string, word2 string) int {
 
 	return recurse(0, 0)
 }
+
+// getting the knight probability and figuring out the probability floating point value that the knight stays on board
+func knightProbability(n int, k int, row int, column int) float64 {
+	moveCache := make(map[string]float64)
+
+	var recurse func(int, int, int) float64
+	recurse = func(rowLocal, colLocal, remainingMoves int) float64 {
+		// cached probability for the knights moves
+		cacheKey := strconv.Itoa(rowLocal) + "-" + strconv.Itoa(colLocal) + "-" + strconv.Itoa(remainingMoves)
+		if cachedVal, found := moveCache[cacheKey]; found {
+			return float64(cachedVal)
+		}
+		// out of bounds base case
+		if rowLocal < 0 || colLocal < 0 || rowLocal >= n || colLocal >= n {
+			return 0.0
+		}
+		// main base cases
+		if remainingMoves == 0 {
+			return 1.0
+		}
+
+		probability := 0.0
+		// 8 directions that the knight can move into
+		directions := [][]int{
+			{2, 1}, {2, -1}, {-2, 1}, {-2, -1},
+			{1, 2}, {1, -2}, {-1, 2}, {-1, -2},
+		}
+		// exploring all possible 8 directions for the knight
+		for _, direction := range directions {
+			newRow := direction[0] + rowLocal
+			newCol := direction[1] + colLocal
+			if remainingMoves > 0 {
+				probability = probability + recurse(newRow, newCol, remainingMoves-1)
+			}
+		}
+		// updating the probability and returning the final probability from each recursive chain
+		finalProbabilityPerMove := probability / 8
+		moveCache[cacheKey] = finalProbabilityPerMove
+		return finalProbabilityPerMove
+	}
+
+	return recurse(row, column, k)
+}
