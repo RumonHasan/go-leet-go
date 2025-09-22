@@ -1377,3 +1377,57 @@ func knightProbability(n int, k int, row int, column int) float64 {
 
 	return recurse(row, column, k)
 }
+
+// word search problem using dfs to solve the path and to see whether the letters make up the word or not
+func exist(board [][]byte, word string) bool {
+	rowLen := len(board)
+	colLen := len(board[0])
+	exist := false
+	filler := '#'
+
+	var recurse func(int, int, int, [][]byte) bool
+	recurse = func(row, col, index int, boardRef [][]byte) bool {
+		if index == len(word) {
+			return true
+		}
+		// base case
+		if row < 0 || col < 0 || row >= rowLen || col >= colLen || boardRef[row][col] == byte(filler) {
+			return false
+		}
+
+		if boardRef[row][col] != word[index] {
+			return false
+		}
+		// visited
+		tempCell := boardRef[row][col]
+		boardRef[row][col] = byte(filler)
+		validPath := false
+
+		directions := [][]int{{0, 1}, {0, -1}, {-1, 0}, {1, 0}}
+
+		for _, direction := range directions {
+			newRow := direction[0] + row
+			newCol := direction[1] + col
+			validPath = recurse(newRow, newCol, index+1, boardRef)
+			if validPath {
+				return validPath
+			}
+		}
+
+		boardRef[row][col] = tempCell // for backtracking
+		return validPath
+	}
+
+	for i := 0; i < len(board); i++ {
+		for j := 0; j < len(board[i]); j++ {
+			if board[i][j] == word[0] {
+				exist = recurse(i, j, 0, board)
+				if exist {
+					return exist
+				}
+			}
+
+		}
+	}
+	return exist
+}
