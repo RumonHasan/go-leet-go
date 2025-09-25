@@ -1431,3 +1431,37 @@ func exist(board [][]byte, word string) bool {
 	}
 	return exist
 }
+
+// deleting strings and letters from its prefix so a prefix copy can also be deleted in addition
+func deleteString(s string) int {
+	minDeletions := 0
+	memo := make(map[int]int)
+
+	var recurse func(int) int
+	recurse = func(start int) int {
+		// cached max key value
+		key := start
+		if keyVal, found := memo[key]; found {
+			return keyVal
+		}
+		if start == len(s) {
+			return 0
+		}
+
+		minLocalDel := 1
+		// for loop keeps in check and limit within the half string length
+		for index := 1; index <= (len(s)-start)/2; index++ {
+			// checking the equal length sub in the next section while staying in len bounds
+			if s[start:start+index] == s[start+index:start+2*index] {
+				minLocalDel = max(minLocalDel, 1+recurse(start+index))
+			}
+		}
+
+		memo[key] = minLocalDel
+		return minLocalDel
+	}
+
+	minDeletions = recurse(0)
+
+	return minDeletions
+}
