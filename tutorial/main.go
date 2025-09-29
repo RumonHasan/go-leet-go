@@ -1465,3 +1465,53 @@ func deleteString(s string) int {
 
 	return minDeletions
 }
+
+// checking to see whether all the flower garden ranges can be watered or not but using the minimum number of taps
+func minTaps(n int, ranges []int) int {
+	memo := make(map[int]int)
+	intervals := make([]int, 0)
+	minTaps := math.MaxInt32
+
+	// will distribute intervals where the left most index will contain the limit of the right most
+	for index, value := range ranges {
+		leftLimit := max(0, index-value)
+		rightLimit := min(n, index+value)
+		if rightLimit > leftLimit {
+			intervals[leftLimit] = rightLimit // adding the left index limit to the right limit
+		}
+
+	}
+
+	// primary recursive function to check for the widest ranges
+	var recurse func(int) int
+	recurse = func(position int) int {
+		cacheKey := position
+		if val, found := memo[cacheKey]; found {
+			return val
+		}
+		// main base case that will return 0 if it reaches the target
+		if position >= n {
+			return 0
+		}
+		minLocalTaps := math.MaxInt32
+		for index := 0; index <= position; index++ {
+			currRightRange := intervals[index]
+			if currRightRange > position {
+				localResult := recurse(currRightRange)
+				if localResult != math.MaxInt32 {
+					minLocalTaps = min(minLocalTaps, localResult+1)
+				}
+			}
+		}
+
+		memo[cacheKey] = minLocalTaps
+		return minLocalTaps
+	}
+
+	minTaps = recurse(0)
+	if minTaps == math.MaxInt32 {
+		return -1
+	}
+
+	return minTaps
+}
