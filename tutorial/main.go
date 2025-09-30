@@ -1481,7 +1481,6 @@ func minTaps(n int, ranges []int) int {
 		}
 
 	}
-
 	// primary recursive function to check for the widest ranges
 	var recurse func(int) int
 	recurse = func(position int) int {
@@ -1503,15 +1502,61 @@ func minTaps(n int, ranges []int) int {
 				}
 			}
 		}
-
 		memo[cacheKey] = minLocalTaps
 		return minLocalTaps
 	}
-
 	minTaps = recurse(0)
 	if minTaps == math.MaxInt32 {
 		return -1
 	}
 
 	return minTaps
+}
+
+// problem of video stitching using dfs memo
+// we primarily care about the end values only
+func videoStitching(clips [][]int, time int) int {
+	memo := make(map[int]int)
+	maxReach := make([]int, time+1) // by default the intiail values are 0
+	minClips := math.MaxInt32
+
+	// populate max reach array and its a single dimension linear array
+	for index := 0; index < len(clips); index++ {
+		clipStart := clips[index][0]
+		clipEnd := clips[index][1]
+		if clipStart <= time {
+			maxReach[clipStart] = max(maxReach[clipStart], clipEnd)
+		}
+
+	}
+
+	var recurse func(int) int
+	recurse = func(currPos int) int {
+		// min clip count
+		key := currPos
+		if val, found := memo[key]; found {
+			return val
+		}
+		if currPos >= time {
+			return 0
+		}
+		minClipCount := math.MaxInt32
+		furthest := min(maxReach[currPos], time)
+		// recursing through max reach and checking for the right most limit in order to collect the final count
+		for index := currPos + 1; index <= furthest; index++ {
+			localRecurseResult := recurse(index)
+			if localRecurseResult != math.MaxInt32 {
+				minClipCount = min(minClipCount, 1+localRecurseResult)
+			}
+
+		}
+		memo[key] = minClipCount
+		return minClipCount
+	}
+
+	minClips = recurse(0)
+	if minClips == math.MaxInt32 {
+		return -1
+	}
+	return minClips
 }
