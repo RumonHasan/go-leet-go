@@ -1598,3 +1598,26 @@ func longestStrChain(words []string) int {
 
 	return maxStringChain
 }
+
+// simple one step solution
+func maxBottlesDrunk(numBottles int, numExchange int) int {
+	cache := make(map[string]int)
+
+	var recurse func(int, int) int
+	recurse = func(empty, rate int) int {
+
+		cacheKey := fmt.Sprintf("%d-%d", empty, rate)
+		if val, found := cache[cacheKey]; found {
+			return val
+		}
+
+		if empty < rate {
+			return 0
+		}
+
+		return 1 + recurse(empty-rate+1, rate+1)
+
+	}
+
+	return numBottles + recurse(numBottles, numExchange)
+}
