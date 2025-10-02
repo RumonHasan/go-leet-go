@@ -1560,3 +1560,41 @@ func videoStitching(clips [][]int, time int) int {
 	}
 	return minClips
 }
+
+// longest string chain using dfs recursive method and using the cache approach to store the current max length of the chain
+func longestStrChain(words []string) int {
+	maxStringChain := 0
+	wordSet := make(map[string]bool)
+	for _, word := range words {
+		wordSet[word] = true
+	}
+	memo := make(map[string]int)
+
+	var recurse func(string) int
+	recurse = func(currWord string) int {
+		// cached chain value
+		cacheKey := currWord
+		if val, found := memo[cacheKey]; found {
+			return val
+		}
+		localMaxLength := 1 // will contain the local max length of the current series of chain
+
+		for index := 0; index < len(currWord); index++ {
+			currSlice := currWord[:index] + currWord[index+1:]
+			if wordSet[currSlice] == true {
+				currMaxChain := recurse(currSlice)
+				// updating the localMaxLength with +1 to get the current chain value
+				localMaxLength = max(localMaxLength, 1+currMaxChain)
+			}
+		}
+
+		memo[cacheKey] = localMaxLength
+		return localMaxLength
+	}
+
+	for _, word := range words {
+		maxStringChain = max(maxStringChain, recurse(word))
+	}
+
+	return maxStringChain
+}
