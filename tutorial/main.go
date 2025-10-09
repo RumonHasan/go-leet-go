@@ -1621,3 +1621,40 @@ func maxBottlesDrunk(numBottles int, numExchange int) int {
 
 	return numBottles + recurse(numBottles, numExchange)
 }
+
+// recursion hard -> skip and count recursion logic cannot exceed minProfit account and n number of groups of people
+func profitableSchemes(n int, minProfit int, group []int, profit []int) int {
+	memo := make(map[string]int)
+	const MOD = 1000000007
+	// main recursive to check membersUsed , currprofit and things like that
+	var recurse func(index, membersUsed, currProfit int) int
+	recurse = func(index, membersUsed, currProfit int) int {
+		// cache key -> returning cached max
+		cacheKey := strconv.Itoa(index) + "-" + strconv.Itoa(membersUsed) + "-" + strconv.Itoa(currProfit)
+		if cachedSchemes, found := memo[cacheKey]; found {
+			return cachedSchemes
+		}
+		// main base case and to check currProfit is bigger than minProfit then return 1
+		if index >= len(group) {
+			if currProfit >= minProfit {
+				return 1
+			} else {
+				return 0
+			}
+		}
+		// included ways
+		includedSchemeCount := 0
+		// skipped path for min scheme count -> recursive index iteration despite whichever index ur in
+		skippedSchemeCount := recurse(index+1, membersUsed, currProfit)
+		// use the current path
+		if membersUsed+group[index] <= n { // to check membersUsed leakage
+			currMinProfit := min(minProfit, currProfit+profit[index]) // optimization approach
+			includedSchemeCount = recurse(index+1, membersUsed+group[index], currMinProfit)
+		}
+		totalSchemes := (includedSchemeCount + skippedSchemeCount) % MOD
+		memo[cacheKey] = totalSchemes
+		return totalSchemes
+	}
+
+	return recurse(0, 0, 0)
+}
