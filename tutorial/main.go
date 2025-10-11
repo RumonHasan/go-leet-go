@@ -1658,3 +1658,79 @@ func profitableSchemes(n int, minProfit int, group []int, profit []int) int {
 
 	return recurse(0, 0, 0)
 }
+
+// HARD level string dfs memo recursive based question
+func minStickers(stickers []string, target string) int {
+	stickerCounts := make([][26]int, len(stickers))
+	stickerCache := make(map[string]int)
+	countWays := math.MaxInt32
+	const MOD = 1000000007
+	// counting letters and returning a sub 26 letter freq matrix
+	countLetters := func(word string) [26]int {
+		var counts [26]int
+		for _, character := range word {
+			counts[character-'a']++
+		}
+		return counts
+	}
+	// constructing stick count matrix to store frequencies of chars in stickers
+	for i, sticker := range stickers {
+		stickerCounts[i] = countLetters(sticker)
+	}
+	// subtracting letters from the count matrix
+	substractLetters := func(stickerCountMatrix [26]int, currTarget string) string {
+		var count [26]int
+		for _, ch := range currTarget {
+			count[ch-'a']++
+		}
+		// subtracting the letter
+		for i := 0; i < 26; i++ {
+			count[i] -= stickerCountMatrix[i]
+			if count[i] < 0 { // offsetting to 0
+				count[i] = 0
+			}
+		}
+		var newTarget string
+		// populating the new target
+		for i := 0; i < 26; i++ { // current letter index
+			for j := 0; j < count[i]; j++ { // checking how many times the current letter is present
+				newTarget += string('a' + i)
+			}
+		}
+		return newTarget
+	}
+
+	// main recursive function to check very sub stickers
+	var recurse func(string) int
+	recurse = func(currTarget string) int {
+		stickerKey := currTarget
+		if val, found := stickerCache[stickerKey]; found {
+			return val
+		}
+
+		// main base case
+		if currTarget == "" {
+			return 0
+		}
+		// first letter of currtarget
+		currFirstIndex := currTarget[0] - 'a'
+		minLocalWays := math.MaxInt32
+
+		for _, stickerCountMatrix := range stickerCounts {
+			if stickerCountMatrix[currFirstIndex] == 0 {
+				continue
+			}
+			newTarget := substractLetters(stickerCountMatrix, currTarget)
+			minRes := 1 + recurse(newTarget)
+			minLocalWays = min(minLocalWays, minRes)
+		}
+
+		stickerCache[stickerKey] = minLocalWays
+		return minLocalWays
+	}
+	countWays = recurse(target)
+	if countWays == math.MaxInt32 {
+		return -1
+	}
+	return countWays
+}
