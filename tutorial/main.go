@@ -1734,3 +1734,28 @@ func minStickers(stickers []string, target string) int {
 	}
 	return countWays
 }
+
+func minPathSum(grid [][]int) int {
+	memo := make(map[string]int)
+
+	var recurse func(int, int) int
+	recurse = func(row, col int) int {
+		if row < 0 || col < 0 || row >= len(grid) || col >= len(grid[0]) {
+			return math.MaxInt32
+		}
+		cacheKey := strconv.Itoa(row) + "-" + strconv.Itoa(col)
+		if val, found := memo[cacheKey]; found {
+			return val
+		}
+		// bottom right is the final destination
+		if row == len(grid)-1 && col == len(grid[0])-1 {
+			return grid[row][col]
+		}
+		minLocalWays := min(recurse(row+1, col), recurse(row, col+1)) + grid[row][col]
+		memo[cacheKey] = minLocalWays
+		return minLocalWays
+
+	}
+
+	return recurse(0, 0)
+}
