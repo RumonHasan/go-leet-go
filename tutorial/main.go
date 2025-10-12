@@ -1759,3 +1759,36 @@ func minPathSum(grid [][]int) int {
 
 	return recurse(0, 0)
 }
+
+// main recursive approach would be going down then down right then memoization the minimum path
+func minimumTotal(triangle [][]int) int {
+	minPathSum := math.MaxInt32
+	memo := make(map[string]int)
+
+	var recurse func(int, int) int
+	recurse = func(row, col int) int {
+		cacheKey := strconv.Itoa(row) + "-" + strconv.Itoa(col)
+		if val, found := memo[cacheKey]; found {
+			return val
+		}
+		// base case
+		if row < 0 || col < 0 || row >= len(triangle) || col >= len(triangle[row]) {
+			return 0
+		}
+		// main base case to return the final element
+		if row == len(triangle)-1 && col == len(triangle[row])-1 {
+			return triangle[row][col]
+		}
+		localMin := math.MaxInt32
+		// we can only more down or down - right
+		localMin = min(recurse(row+1, col+1), recurse(row+1, col)) + triangle[row][col]
+		memo[cacheKey] = localMin
+		return localMin
+	}
+
+	minPathSum = recurse(0, 0)
+	if minPathSum == math.MaxInt32 {
+		return -1
+	}
+	return minPathSum
+}
