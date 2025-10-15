@@ -1792,3 +1792,99 @@ func minimumTotal(triangle [][]int) int {
 	}
 	return minPathSum
 }
+
+// dfs recursive approach -> bidirectional graph approach
+func findTheCity(n int, edges [][]int, distanceThreshold int) int {
+	memo := make(map[string]int)
+	citiesCovered := math.MaxInt32
+	bestCityIndex := -1
+	// bidirectional graph
+	graph := make(map[int][][2]int) // map will have a matrix has from, to and weightage
+	for _, edge := range edges {
+		from, to, weight := edge[0], edge[1], edge[2]
+		// adding from and to as key pairs for bidirectional approach
+		graph[from] = append(graph[from], [2]int{to, weight})
+		graph[to] = append(graph[to], [2]int{from, weight})
+	}
+	// main recursive function
+	var recurse func(int, int, map[int]bool) int
+	recurse = func(currentCity, remainingVisits int, visitedSet map[int]bool) int {
+		// visited cache key
+		visitedKey := strconv.Itoa(currentCity) + "-" + strconv.Itoa(remainingVisits)
+		if val, found := memo[visitedKey]; found {
+			return val
+		}
+		// remaining visits below 0 means there is city can be visited
+		if remainingVisits < 0 {
+			return 0
+		}
+		visitedSet[currentCity] = true
+		// main recursive calculation
+		visitedCities := 0
+		for _, curr := range graph[currentCity] {
+			destination, weight := curr[0], curr[1]
+			if !visitedSet[destination] && remainingVisits >= weight {
+				if remainingVisits > 0 {
+					localVisits := recurse(destination, remainingVisits-weight, visitedSet)
+					visitedCities += 1 + localVisits
+				}
+			}
+		}
+		visitedSet[currentCity] = false
+		memo[visitedKey] = visitedCities
+		return visitedCities
+	}
+	// should be starting from each city
+	for cityIndex := 0; cityIndex < n; cityIndex++ {
+		result := recurse(cityIndex, distanceThreshold, make(map[int]bool))
+		// pruning based on cities covered and city index threshold reached
+		if result < citiesCovered || (result == citiesCovered && cityIndex > bestCityIndex) {
+			citiesCovered = result
+			bestCityIndex = cityIndex
+		}
+	}
+	return bestCityIndex
+}
+
+// straight forward dp problem
+func minSwap(nums1 []int, nums2 []int) int {
+	memo := make(map[string]int)
+	minOperations := math.MaxInt32
+	minOperationsSwap := math.MaxInt32
+
+	// main recursive function
+	var recurse func(int, bool) int
+	recurse = func(index int, isPrevSwapped bool) int {
+		// returning the cached min operation count
+		key := fmt.Sprintf("%d-%t", index, isPrevSwapped)
+		if val, found := memo[key]; found {
+			return val
+		}
+		// main base case
+		if index >= len(nums1) {
+			return 0
+		}
+		minCountOperations := math.MaxInt32
+		prev1 := nums1[index-1]
+		prev2 := nums2[index-1]
+		// swapping logic comes after determining the state whether its acceptable or not to swap
+		if isPrevSwapped {
+			prev1, prev2 = prev2, prev1
+		}
+		// dont swap
+		if nums1[index] > prev1 && nums2[index] > prev2 {
+			minCountOperations = min(minCountOperations, recurse(index+1, false))
+		}
+		// swap
+		if nums1[index] > prev2 && nums2[index] > prev1 {
+			minCountOperations = min(minCountOperations, 1+recurse(index+1, true))
+		}
+
+		memo[key] = minCountOperations
+		return minCountOperations
+	}
+
+	minOperations = recurse(1, false)
+	minOperationsSwap = 1 + recurse(1, true)
+	return min(minOperations, minOperationsSwap)
+}
