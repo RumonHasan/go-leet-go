@@ -1888,3 +1888,67 @@ func minSwap(nums1 []int, nums2 []int) int {
 	minOperationsSwap = 1 + recurse(1, true)
 	return min(minOperations, minOperationsSwap)
 }
+
+// HARD Problem := finding out the optimal length of hte string
+func getLengthOfOptimalCompression(s string, k int) int {
+	memo := make(map[string]int)
+	n := len(s)
+	// function to count same value
+	countSame := func(count int) int {
+		if count == 1 {
+			return 1
+		}
+		if count < 10 {
+			return 2
+		}
+		// so if its double digits
+		if count < 100 {
+			return 3
+		}
+		return 4
+	}
+
+	var recurse func(int, int) int
+	recurse = func(index, kCount int) int {
+		// base cases
+		cacheKey := strconv.Itoa(index) + "-" + strconv.Itoa(kCount)
+		if val, found := memo[cacheKey]; found {
+			return val
+		}
+		if index == n {
+			return 0
+		}
+		// if more deletion values remain than the final characters remaining then delete all
+		if n-index <= kCount {
+			return 0
+		}
+		result := math.MaxInt32
+
+		// initial deletion step
+		if kCount > 0 {
+			result = min(result, recurse(index+1, kCount-1))
+		}
+
+		// if not deleted then checking similar count
+		sameCount := 0
+		deleteCount := 0
+		for subIndex := index; subIndex < n; subIndex++ {
+			if s[subIndex] == s[index] {
+				sameCount++
+			} else {
+				deleteCount++
+			}
+			// if too many deleted then get out of the loop
+			if deleteCount > kCount {
+				break
+			}
+			// getting the minimum of result recursed value and taking countSame length along with it and seeing how many can be deleted
+			result = min(result, countSame(sameCount)+recurse(subIndex+1, kCount-deleteCount))
+		}
+
+		memo[cacheKey] = result
+		return result
+	}
+
+	return recurse(0, k)
+}
