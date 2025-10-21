@@ -1952,3 +1952,33 @@ func getLengthOfOptimalCompression(s string, k int) int {
 
 	return recurse(0, k)
 }
+
+// using greedy
+func compress(chars []byte) int {
+	readIndex := 0
+	writeIndex := 0
+
+	for readIndex < len(chars) {
+		currChar := chars[readIndex]
+		sameCount := 0
+
+		// adding the same chars as a count
+		for readIndex < len(chars) && chars[readIndex] == currChar {
+			sameCount++
+			readIndex++
+		}
+
+		// updating the first letter of hte changed write index
+		chars[writeIndex] = currChar
+		writeIndex++
+
+		if sameCount > 1 {
+			for _, char := range []byte(fmt.Sprintf("%d", sameCount)) {
+				chars[writeIndex] = char
+				writeIndex++
+			}
+		}
+	}
+
+	return writeIndex
+}
