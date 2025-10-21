@@ -1982,3 +1982,46 @@ func compress(chars []byte) int {
 
 	return writeIndex
 }
+
+// length of LIS is a tricky one
+func lengthOfLIS(nums []int) int {
+	n := len(nums)
+
+	// dp[i][j] represents LIS starting at index i, with previous index j-1
+	// (we shift prevIndex by +1 so that -1 → 0)
+	dp := make([][]int, n)
+	for i := range dp {
+		dp[i] = make([]int, n+1)
+		for j := range dp[i] {
+			dp[i][j] = -1
+		}
+	}
+
+	var recurse func(int, int) int
+	recurse = func(currIndex, prevIndex int) int {
+		// base case
+		if currIndex == n {
+			return 0
+		}
+
+		// check memo
+		if dp[currIndex][prevIndex+1] != -1 {
+			return dp[currIndex][prevIndex+1]
+		}
+
+		// option 1: skip current element
+		skip := recurse(currIndex+1, prevIndex)
+
+		// option 2: take current element (only if valid)
+		include := 0
+		if prevIndex == -1 || nums[prevIndex] < nums[currIndex] {
+			include = 1 + recurse(currIndex+1, currIndex)
+		}
+
+		// store and return
+		dp[currIndex][prevIndex+1] = max(include, skip)
+		return dp[currIndex][prevIndex+1]
+	}
+
+	return recurse(0, -1)
+}
