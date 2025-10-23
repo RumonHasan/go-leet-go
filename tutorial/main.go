@@ -2003,12 +2003,10 @@ func lengthOfLIS(nums []int) int {
 		if currIndex == n {
 			return 0
 		}
-
 		// check memo
 		if dp[currIndex][prevIndex+1] != -1 {
 			return dp[currIndex][prevIndex+1]
 		}
-
 		// option 1: skip current element
 		skip := recurse(currIndex+1, prevIndex)
 
@@ -2024,4 +2022,43 @@ func lengthOfLIS(nums []int) int {
 	}
 
 	return recurse(0, -1)
+}
+
+// creating maxDotProduct sequence
+func maxDotProduct(nums1 []int, nums2 []int) int {
+	memo := make(map[string]int)
+	maxProd := math.MinInt32
+
+	var recurse func(int, int) int
+	recurse = func(indexOne, indexTwo int) int {
+		cachkey := strconv.Itoa(indexOne) + "-" + strconv.Itoa(indexTwo)
+		if val, found := memo[cachkey]; found {
+			return val
+		}
+		// if it exceeds either of the 0 then there is no element to multiply with
+		if indexOne >= len(nums1) || indexTwo >= len(nums2) {
+			return math.MinInt32
+		}
+
+		maxDotProduct := 0
+
+		// starting new for multiplying indexOne with indexTwo
+		startNew := nums1[indexOne] * nums2[indexTwo]
+		// taking both and starting the path
+		takeBoth := nums1[indexOne]*nums2[indexTwo] + recurse(indexOne+1, indexTwo+1)
+
+		// skips
+		skipFirst := recurse(indexOne+1, indexTwo)
+		skipSecond := recurse(indexOne, indexTwo+1)
+
+		maxDotProduct = max(skipFirst, skipSecond, takeBoth, startNew)
+		memo[cachkey] = maxDotProduct
+		return maxDotProduct
+	}
+
+	maxProd = recurse(0, 0)
+	if maxProd == math.MinInt32 {
+		return -1
+	}
+	return maxProd
 }
