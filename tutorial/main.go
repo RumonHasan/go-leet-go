@@ -2062,3 +2062,8 @@ func maxDotProduct(nums1 []int, nums2 []int) int {
 	}
 	return maxProd
 }
+
+// min Distance
+func maxUncrossedLines(nums1 []int, nums2 []int) int {
+
+}
